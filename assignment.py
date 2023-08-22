@@ -39,13 +39,24 @@ def load_assignments():
     except FileNotFoundError:
         return []
 
+def edit_assignment(assignment):
+    print(f"Editing assignment: {assignment.name}")
+    new_name = input("Enter new assignment name: ")
+    new_subject = input("Enter new subject: ")
+    new_due_date = get_due_date()
+    assignment.name = new_name
+    assignment.subject = new_subject
+    assignment.due_date = new_due_date
+
 def main():
     assignments = load_assignments()
 
     while True:
         print("\n1. Add Assignment")
         print("2. Display Assignments")
-        print("3. Exit")
+        print("3. Edit Assignment")
+        print("4. Remove Assignment")
+        print("5. Exit")
         choice = input("Select an option: ")
 
         if choice == "1":
@@ -67,6 +78,24 @@ def main():
                 print(f"Weekends before due: {weekends}\n")
 
         elif choice == "3":
+            index = int(input("Enter the index of the assignment to edit: "))
+            if 0 <= index < len(assignments):
+                edit_assignment(assignments[index])
+                save_assignments(assignments)
+                print("Assignment edited!")
+            else:
+                print("Invalid index.")
+
+        elif choice == "4":
+            index = int(input("Enter the index of the assignment to remove: "))
+            if 0 <= index < len(assignments):
+                removed_assignment = assignments.pop(index)
+                save_assignments(assignments)
+                print(f"Assignment '{removed_assignment.name}' removed.")
+            else:
+                print("Invalid index.")
+
+        elif choice == "5":
             save_assignments(assignments)
             break
 
