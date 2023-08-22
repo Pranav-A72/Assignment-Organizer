@@ -1,4 +1,5 @@
 import datetime
+import pickle
 
 class Assignment:
     def __init__(self, name, subject, due_date):
@@ -26,8 +27,20 @@ def count_weekends(start_date, end_date):
         current_date += datetime.timedelta(days=1)
     return total_weekends
 
+def save_assignments(assignments):
+    with open("assignments.pkl", "wb") as f:
+        pickle.dump(assignments, f)
+
+def load_assignments():
+    try:
+        with open("assignments.pkl", "rb") as f:
+            assignments = pickle.load(f)
+            return assignments
+    except FileNotFoundError:
+        return []
+
 def main():
-    assignments = []
+    assignments = load_assignments()
 
     while True:
         print("\n1. Add Assignment")
@@ -42,6 +55,7 @@ def main():
             assignment = Assignment(name, subject, due_date)
             assignments.append(assignment)
             print("Assignment added!")
+            save_assignments(assignments)
 
         elif choice == "2":
             assignments.sort(key=lambda x: x.due_date)
@@ -53,6 +67,7 @@ def main():
                 print(f"Weekends before due: {weekends}\n")
 
         elif choice == "3":
+            save_assignments(assignments)
             break
 
         else:
