@@ -69,13 +69,17 @@ def main():
             save_assignments(assignments)
 
         elif choice == "2":
+            today = datetime.date.today()
+            assignments = [assignment for assignment in assignments if (assignment.due_date - today).days >= -2]
             assignments.sort(key=lambda x: x.due_date)
             for assignment in assignments:
-                weekends = count_weekends(datetime.date.today(), assignment.due_date)
+                weekends = count_weekends(today, assignment.due_date)
+                print("")
                 print(f"Assignment: {assignment.name}")
                 print(f"Subject: {assignment.subject}")
                 print(f"Due Date: {assignment.due_date}")
                 print(f"Weekends before due: {weekends}\n")
+
 
         elif choice == "3":
             index = int(input("Enter the index of the assignment to edit: "))
