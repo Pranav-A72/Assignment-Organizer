@@ -1,5 +1,7 @@
 import datetime
 import pickle
+import tkinter as tk
+from tkinter import messagebox, simpledialog
 
 class Assignment:
     def __init__(self, name, subject, due_date):
@@ -10,13 +12,13 @@ class Assignment:
 def get_due_date():
     while True:
         try:
-            year = int(input("Enter year: "))
-            month = int(input("Enter month: "))
-            day = int(input("Enter day: "))
+            year = int(simpledialog.askstring("Due Date", "Enter year: "))
+            month = int(simpledialog.askstring("Due Date", "Enter month: "))
+            day = int(simpledialog.askstring("Due Date", "Enter day: "))
             due_date = datetime.date(year, month, day)
             return due_date
         except ValueError:
-            print("Invalid date. Please enter a valid date.")
+            messagebox.showerror("Invalid Date", "Please enter a valid date.")
 
 def count_weekends(start_date, end_date):
     total_weekends = 0
@@ -51,60 +53,49 @@ def edit_assignment(assignment):
 def main():
     assignments = load_assignments()
 
-    while True:
-        print("\n1. Add Assignment")
-        print("2. Display Assignments")
-        print("3. Edit Assignment")
-        print("4. Remove Assignment")
-        print("5. Exit")
-        choice = input("Select an option: ")
+    root = tk.Tk()
+    root.title("Schoolwork Organizer")
 
-        if choice == "1":
-            name = input("Enter assignment name: ")
-            subject = input("Enter subject: ")
-            due_date = get_due_date()
-            assignment = Assignment(name, subject, due_date)
-            assignments.append(assignment)
-            print("Assignment added!")
-            save_assignments(assignments)
+    def add_assignment():
+        name = simpledialog.askstring("Add Assignment", "Enter assignment name:")
+        subject = simpledialog.askstring("Add Assignment", "Enter subject:")
+        due_date = get_due_date()
+        assignment = Assignment(name, subject, due_date)
+        assignments.append(assignment)
+        save_assignments(assignments)
+        messagebox.showinfo("Assignment Added", "Assignment added!")
 
-        elif choice == "2":
-            today = datetime.date.today()
-            assignments = [assignment for assignment in assignments if (assignment.due_date - today).days >= -2]
-            assignments.sort(key=lambda x: x.due_date)
-            for assignment in assignments:
-                weekends = count_weekends(today, assignment.due_date)
-                print("")
-                print(f"Assignment: {assignment.name}")
-                print(f"Subject: {assignment.subject}")
-                print(f"Due Date: {assignment.due_date}")
-                print(f"Weekends before due: {weekends}\n")
+    def display_assignments():
+        today = datetime.date.today()
+        assignments_to_display = [assignment for assignment in assignments if (assignment.due_date - today).days >= -2]
+        assignments_to_display.sort(key=lambda x: x.due_date)
+        
+        display_window = tk.Toplevel(root)
+        display_window.title("Display Assignments")
+        
+        for assignment in assignments_to_display:
+            weekends = count_weekends(today, assignment.due_date)
+            assignment_info = (
+                f"Assignment: {assignment.name}\n"
+                f"Subject: {assignment.subject}\n"
+                f"Due Date: {assignment.due_date}\n"
+                f"Weekends before due: {weekends}\n\n"
+            )
+            assignment_label = tk.Label(display_window, text=assignment_info, justify=tk.LEFT)
+            assignment_label.pack()
 
+    # Create GUI buttons
+    add_button = tk.Button(root, text="Add Assignment", command=add_assignment)
+    display_button = tk.Button(root, text="Display Assignments", command=display_assignments)
+    exit_button = tk.Button(root, text="Exit", command=root.destroy)
 
-        elif choice == "3":
-            index = int(input("Enter the index of the assignment to edit: "))
-            if 0 <= index < len(assignments):
-                edit_assignment(assignments[index])
-                save_assignments(assignments)
-                print("Assignment edited!")
-            else:
-                print("Invalid index.")
+    # Place buttons on the window
+    add_button.pack(pady=10)
+    display_button.pack(pady=10)
+    exit_button.pack(pady=10)
 
-        elif choice == "4":
-            index = int(input("Enter the index of the assignment to remove: "))
-            if 0 <= index < len(assignments):
-                removed_assignment = assignments.pop(index)
-                save_assignments(assignments)
-                print(f"Assignment '{removed_assignment.name}' removed.")
-            else:
-                print("Invalid index.")
-
-        elif choice == "5":
-            save_assignments(assignments)
-            break
-
-        else:
-            print("Invalid choice. Please select a valid option.")
+    root.mainloop()
 
 if __name__ == "__main__":
     main()
+
