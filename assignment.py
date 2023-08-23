@@ -3,7 +3,7 @@ import pickle
 import tkinter as tk
 from tkinter import simpledialog, messagebox
 from tkinter import ttk
-from ttkthemes import ThemedStyle  # Install ttkthemes using pip: pip install ttkthemes
+from ttkthemes import ThemedStyle  
 
 class Assignment:
     def __init__(self, name, subject, due_date):
@@ -23,16 +23,22 @@ def get_due_date():
             messagebox.showerror("Invalid Date", "Please enter a valid date.")
 
 def save_assignments(assignments):
-    with open("Savefile.pkl", "wb") as f:
+    with open("C:\Users\prana\OneDrive\Desktop\Savefile.pkl", "wb") as f:
         pickle.dump(assignments, f)
 
 def load_assignments():
     try:
-        with open("Savefile.pkl", "rb") as f:
+        with open("C:\Users\prana\OneDrive\Desktop\Savefile.pkl", "rb") as f:
             assignments = pickle.load(f)
             return assignments
     except FileNotFoundError:
         return []
+
+def add_assignment_dialog():
+    name = simpledialog.askstring("Add Assignment", "Enter assignment name:")
+    subject = simpledialog.askstring("Add Assignment", "Enter subject:")
+    due_date = get_due_date()
+    return name, subject, due_date
 
 def main():
     assignments = load_assignments()
@@ -63,14 +69,24 @@ def main():
     populate_treeview()
 
     def add_assignment():
-        name = simpledialog.askstring("Add Assignment", "Enter assignment name:")
-        subject = simpledialog.askstring("Add Assignment", "Enter subject:")
-        due_date = get_due_date()
-        assignment = Assignment(name, subject, due_date)
-        assignments.append(assignment)
-        save_assignments(assignments)
-        tree.insert("", "end", values=(assignment.name, assignment.subject, assignment.due_date))
-        messagebox.showinfo("Assignment Added", "Assignment added!")
+        input_values = simpledialog.askstring("Add Assignment", "Enter assignment details (Name, Subject, Due Date)\n\nFormat: Name,Subject,YYYY-MM-DD")
+        
+        if input_values:
+            values = input_values.split(",")
+            if len(values) == 3:
+                name, subject, due_date_str = values
+                try:
+                    due_date = datetime.datetime.strptime(due_date_str, "%Y-%m-%d").date()
+                    assignment = Assignment(name, subject, due_date)
+                    assignments.append(assignment)
+                    save_assignments(assignments)
+                    tree.insert("", "end", values=(assignment.name, assignment.subject, assignment.due_date))
+                    messagebox.showinfo("Assignment Added", "Assignment added!")
+                except ValueError:
+                    messagebox.showerror("Invalid Date", "Please enter a valid date in the format YYYY-MM-DD.")
+            else:
+                messagebox.showerror("Invalid Input", "Please provide all three values: Name, Subject, Due Date.")
+
 
     def edit_assignment():
         selected_item = tree.selection()[0]
