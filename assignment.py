@@ -1,7 +1,9 @@
 import datetime
 import pickle
 import tkinter as tk
-from tkinter import messagebox, simpledialog
+from tkinter import simpledialog, messagebox
+from tkinter import ttk
+from ttkthemes import ThemedStyle  # Install ttkthemes using pip: pip install ttkthemes
 
 class Assignment:
     def __init__(self, name, subject, due_date):
@@ -20,15 +22,6 @@ def get_due_date():
         except ValueError:
             messagebox.showerror("Invalid Date", "Please enter a valid date.")
 
-def count_weekends(start_date, end_date):
-    total_weekends = 0
-    current_date = start_date
-    while current_date <= end_date:
-        if current_date.weekday() >= 5:  # Saturday or Sunday
-            total_weekends += 1
-        current_date += datetime.timedelta(days=1)
-    return total_weekends
-
 def save_assignments(assignments):
     with open("assignments.pkl", "wb") as f:
         pickle.dump(assignments, f)
@@ -41,20 +34,33 @@ def load_assignments():
     except FileNotFoundError:
         return []
 
-def edit_assignment(assignment):
-    print(f"Editing assignment: {assignment.name}")
-    new_name = input("Enter new assignment name: ")
-    new_subject = input("Enter new subject: ")
-    new_due_date = get_due_date()
-    assignment.name = new_name
-    assignment.subject = new_subject
-    assignment.due_date = new_due_date
-
 def main():
     assignments = load_assignments()
 
     root = tk.Tk()
     root.title("Schoolwork Organizer")
+    root.geometry("800x500")  # Adjust the window size as needed
+
+    style = ThemedStyle(root)
+    style.set_theme("equilux")  # You can choose other themes from ttkthemes
+
+    def toggle_theme():
+        current_theme = style.theme_use()
+        new_theme = "equilux" if current_theme == "equilux-dark" else "equilux-dark"
+        style.set_theme(new_theme)
+
+    # Create a treeview to display assignments
+    tree = ttk.Treeview(root, columns=("Name", "Subject", "Due Date"))
+    tree.heading("#1", text="Name")
+    tree.heading("#2", text="Subject")
+    tree.heading("#3", text="Due Date")
+    tree.pack(fill=tk.BOTH, expand=True)
+
+    def populate_treeview():
+        for assignment in assignments:
+            tree.insert("", "end", values=(assignment.name, assignment.subject, assignment.due_date))
+
+    populate_treeview()
 
     def add_assignment():
         name = simpledialog.askstring("Add Assignment", "Enter assignment name:")
@@ -63,39 +69,43 @@ def main():
         assignment = Assignment(name, subject, due_date)
         assignments.append(assignment)
         save_assignments(assignments)
+        tree.insert("", "end", values=(assignment.name, assignment.subject, assignment.due_date))
         messagebox.showinfo("Assignment Added", "Assignment added!")
 
-    def display_assignments():
-        today = datetime.date.today()
-        assignments_to_display = [assignment for assignment in assignments if (assignment.due_date - today).days >= -2]
-        assignments_to_display.sort(key=lambda x: x.due_date)
-        
-        display_window = tk.Toplevel(root)
-        display_window.title("Display Assignments")
-        
-        for assignment in assignments_to_display:
-            weekends = count_weekends(today, assignment.due_date)
-            assignment_info = (
-                f"Assignment: {assignment.name}\n"
-                f"Subject: {assignment.subject}\n"
-                f"Due Date: {assignment.due_date}\n"
-                f"Weekends before due: {weekends}\n\n"
-            )
-            assignment_label = tk.Label(display_window, text=assignment_info, justify=tk.LEFT)
-            assignment_label.pack()
+    def edit_assignment():
+        selected_item = tree.selection()[0]
+        index = tree.index(selected_item)
+        assignment = assignments[index]
+        new_name = simpledialog.askstring("Edit Assignment", "Enter new assignment name:", initialvalue=assignment.name)
+        new_subject = simpledialog.askstring("Edit Assignment", "Enter new subject:", initialvalue=assignment.subject)
+        new_due_date = get_due_date()
+        assignment.name = new_name
+        assignment.subject = new_subject
+        assignment.due_date = new_due_date
+        save_assignments(assignments)
+        tree.item(selected_item, values=(assignment.name, assignment.subject, assignment.due_date))
+        messagebox.showinfo("Assignment Edited", "Assignment edited!")
 
-    # Create GUI buttons
-    add_button = tk.Button(root, text="Add Assignment", command=add_assignment)
-    display_button = tk.Button(root, text="Display Assignments", command=display_assignments)
-    exit_button = tk.Button(root, text="Exit", command=root.destroy)
+    def remove_assignment():
+        selected_item = tree.selection()[0]
+        index = tree.index(selected_item)
+        removed_assignment = assignments.pop(index)
+        save_assignments(assignments)
+        tree.delete(selected_item)
+        messagebox.showinfo("Assignment Removed", f"Assignment '{removed_assignment.name}' removed.")
 
-    # Place buttons on the window
-    add_button.pack(pady=10)
-    display_button.pack(pady=10)
-    exit_button.pack(pady=10)
+    # Create buttons for actions
+    add_button = ttk.Button(root, text="Add Assignment", command=add_assignment)
+    edit_button = ttk.Button(root, text="Edit Assignment", command=edit_assignment)
+    remove_button = ttk.Button(root, text="Remove Assignment", command=remove_assignment)
+    toggle_button = ttk.Button(root, text="Toggle Theme", command=toggle_theme)
+
+    add_button.pack(pady=5)
+    edit_button.pack(pady=5)
+    remove_button.pack(pady=5)
+    toggle_button.pack(pady=5)
 
     root.mainloop()
 
 if __name__ == "__main__":
     main()
-
