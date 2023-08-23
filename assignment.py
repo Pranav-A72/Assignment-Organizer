@@ -23,12 +23,12 @@ def get_due_date():
             messagebox.showerror("Invalid Date", "Please enter a valid date.")
 
 def save_assignments(assignments):
-    with open("assignments.pkl", "wb") as f:
+    with open("Savefile.pkl", "wb") as f:
         pickle.dump(assignments, f)
 
 def load_assignments():
     try:
-        with open("assignments.pkl", "rb") as f:
+        with open("Savefile.pkl", "rb") as f:
             assignments = pickle.load(f)
             return assignments
     except FileNotFoundError:
@@ -38,7 +38,7 @@ def main():
     assignments = load_assignments()
 
     root = tk.Tk()
-    root.title("Schoolwork Organizer")
+    root.title("TODO app")
     root.geometry("800x500")  # Adjust the window size as needed
 
     style = ThemedStyle(root)
